@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "gc-nace-classifier"
+version = "0.1.0"
+description = ""
+authors = ["cesarliz <cesarliz10@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.10.15"
+fastapi = "^0.115.6"
+langchain = "^0.3.14"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
