@@ -1,0 +1,48 @@
+# .pre-commit-config.yaml
+
+repos:
+  - repo: https://github.com/pre-commit/mirrors-mypy  # Static-types check
+    rev: v1.11.1
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - 'pydantic'
+          - 'fastapi'
+        args: ["--explicit-package-bases", "--ignore-missing-imports"]
+
+  - repo: https://github.com/pycqa/flake8  # linter. ToDo: use pylint instead?
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+
+  # Using this mirror to use mypyc-compiled black, 2x faster
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 24.8.0
+    hooks:
+      - id: black
+        # version of Python supported by the project
+        language_version: python3.10.15
+
+  - repo: https://github.com/pre-commit/mirrors-isort  # sorts imports (to maintain consistency)
+    rev: v5.10.1
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+
+  - repo: https://github.com/PyCQA/bandit  # find security issues in Python code
+    rev: 1.7.9
+    hooks:
+      - id: bandit
+
+  - repo: https://github.com/pycqa/autoflake  # re-order imports to pass isort
+    rev: v2.3.1
+    hooks:
+      - id: autoflake
+        args: [ "--in-place", "--remove-all-unused-imports", "--ignore-init-module-imports" ]
+
+  - repo: https://github.com/pycqa/pydocstyle  # check docstrings format
+    rev: 4.0.0
+    hooks:
+      - id: pydocstyle
+        args: ["--convention=numpy"]  # Optional, to follow NumPy conventions
+

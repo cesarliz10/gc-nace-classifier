@@ -10,6 +10,17 @@ python = "3.10.15"
 fastapi = "^0.115.6"
 langchain = "^0.3.14"
 
+[tool.isort]
+profile = "black"
+known_third_party = ["pydantic", "pandas", "click"]  # Include third-party libraries
+remove_redundant_aliases = true
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+namespace_packages = true
+install_types = true
+non_interactive = true
+ignore_missing_imports = false
 
 [build-system]
 requires = ["poetry-core"]

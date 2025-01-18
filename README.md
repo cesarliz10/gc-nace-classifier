@@ -39,3 +39,29 @@ poetry env use $(pyenv which python)
 poetry shell
 poetry install
 ```
+
+## Usage instructions
+
+
+## Project structure
+
+```
+gc-nace-classifier/
+│
+├── gc_nace_classifier/
+│   ├── __init__.py
+│   ├── main.py               # FastAPI entry point
+│   ├── models.py             # Pydantic models
+│   ├── preprocess.py         # Data preprocessing
+│   ├── classify.py           # NACE Classification
+│   ├── extract_material.py   # Raw material extraction
+│
+├── tests/  # ToDo
+│
+├── .python-version
+├── poetry.lock
+├── pyproject.toml
+├── README.md                 # Documentation
+└── data/                     # Sample .csv data
+
+```
