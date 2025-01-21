@@ -3,7 +3,6 @@
 import pandas as pd
 
 from gc_nace_classifier.models import InputColumns as ic
-from gc_nace_classifier.models import InputRow
 from gc_nace_classifier.models import OutputColumns as oc
 
 
@@ -27,10 +26,11 @@ def data_preprocessing(file_path: str) -> pd.DataFrame:
     pd.DataFrame
         A pandas DataFrame with preprocessed data.
     """
-    # Read columns (with types) specified by the InputRow schema
-    _input_schema = InputRow.__annotations__
-    df = pd.read_csv(file_path, usecols=list(_input_schema.keys()), dtype=_input_schema)
+    # Read input columns
+    input_cols = [ic.commodity, ic.sub_commodity, ic.supplier_name, ic.supplier_country]
+    df = pd.read_csv(file_path, usecols=input_cols)
 
+    # Read input columns (with types) specified by the InputRow schema
     if df.empty:
         raise ValueError("The input file is empty.")
 

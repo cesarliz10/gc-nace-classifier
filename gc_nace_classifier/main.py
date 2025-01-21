@@ -2,45 +2,42 @@
 
 from typing import Dict
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, UploadFile
+
+from gc_nace_classifier.classify import classify_nace_code
+from gc_nace_classifier.material import infer_raw_materials
+from gc_nace_classifier.models import OutputColumns as oc
+from gc_nace_classifier.preprocess import data_preprocessing
+from gc_nace_classifier.utils import to_tmp_file, validate_file
 
 app = FastAPI()
 
 
-def validate_file(file: UploadFile) -> None:
+@app.post("/raw-materials")
+async def raw_materials(file: UploadFile = File(...)) -> Dict:
     """
-    Validate that uploaded file is a CSV.
+    Endpoint to infer raw materials for each purchase (row) in the CSV.
 
     Parameters
     ----------
     file : UploadFile
-        The uploaded file to validate.
-    """
-    if not file.filename or not file.filename.endswith(".csv"):
-        raise HTTPException(
-            status_code=400, detail="Invalid file format. Only CSV is supported."
-        )
-
-
-@app.post("/infer-raw-materials")
-async def infer_raw_materials(file: UploadFile = File(...)) -> Dict:
-    """
-    Endpoint to infer the raw materials for each purchase.
-
-    Parameters
-    ----------
-    file : UploadFile
-        A CSV input file with a purchase description per row.
+        A CSV file containing purchase data.
 
     Returns
     -------
     Dict
-        A dictionary with the original data and inferred raw materials.
+        A JSON response containing the index + raw materials per purchase.
     """
+    # Validate input and save to tmp file
     validate_file(file)
-
-    # Placeholder response to be replaced in later steps
-    return {"message": "Raw materials classification logic not yet implemented."}
+    tmp_path = to_tmp_file(file.file)
+    # Preprocess data
+    df = data_preprocessing(tmp_path)
+    # Infer raw materials
+    materials_df = infer_raw_materials(df)
+    # Return dictionary result
+    response = materials_df[[oc.index, oc.raw_materials]].to_dict(orient="records")
+    return {"rows": response}
 
 
 @app.post("/classify-nace")
@@ -51,14 +48,20 @@ async def classify_nace(file: UploadFile = File(...)) -> Dict:
     Parameters
     ----------
     file : UploadFile
-        A CSV input file with a purchase description per row.
+        A CSV file containing purchase data.
 
     Returns
     -------
     Dict
-        A dictionary with the original data and inferred NACE codes.
+        A JSON response containing the index + NACE code results per purchase.
     """
+    # Validate input and save to tmp file
     validate_file(file)
-
-    # Placeholder response to be replaced in later steps
-    return {"message": "NACE code classification logic not yet implemented."}
+    tmp_path = to_tmp_file(file.file)
+    # Preprocess data
+    df = data_preprocessing(tmp_path)
+    # Classification for NACE code
+    nace_df = classify_nace_code(df)
+    # Return dictionary result
+    response = nace_df[[oc.index, oc.nace_code]].to_dict(orient="records")
+    return {"rows": response}

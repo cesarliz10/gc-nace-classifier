@@ -1,6 +1,6 @@
 """Data models used by the service."""
 
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel
 
@@ -22,7 +22,8 @@ class InputRow(BaseModel):
     """Single row of purchase data."""
 
     commodity: str
-    sub_commodity: Optional[str] = None
+    # sub_commodity: Optional[str] = None
+    sub_commodity: str
     supplier_name: str
     supplier_country: str
 
