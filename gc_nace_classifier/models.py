@@ -1,7 +1,5 @@
 """Data models used by the service."""
 
-from typing import List
-
 from pydantic import BaseModel
 
 # --------------------------
@@ -28,12 +26,6 @@ class InputRow(BaseModel):
     supplier_country: str
 
 
-class InputData(BaseModel):
-    """Validated input data for an input batch request."""
-
-    rows: List[InputRow]
-
-
 # --------------------------
 # Data models for Output Data:
 # --------------------------
@@ -42,32 +34,6 @@ class InputData(BaseModel):
 class OutputColumns:
     """Column Registry for output data."""
 
-    index = "index"
+    index = "purchase_index"
     raw_materials = "raw_materials"
     nace_code = "nace_code"
-
-
-class RawMaterialsOutputRow(BaseModel):
-    """Raw materials inferred for a single purchase."""
-
-    index: int
-    raw_materials: List[str]
-
-
-class RawMaterialsOutputData(BaseModel):
-    """Output data for raw materials batch inference."""
-
-    rows: List[RawMaterialsOutputRow]
-
-
-class NACEOutputRow(BaseModel):
-    """NACE classification for a single purchase."""
-
-    index: int
-    nace_code: str
-
-
-class NACEOutputData(BaseModel):
-    """Output data for NACE batch classification."""
-
-    rows: List[NACEOutputRow]

@@ -1,39 +1,60 @@
 """Module for NACE code classification."""
 
+import logging
+from typing import List
+
 import pandas as pd
+from langchain_community.vectorstores import FAISS
 
 from gc_nace_classifier.models import InputColumns as ic
 from gc_nace_classifier.models import OutputColumns as oc
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
-def classify_nace_code(df: pd.DataFrame) -> pd.DataFrame:
-    """Classifies each purchase into a NACE code.
+
+def classify_nace_code(df: pd.DataFrame, nace_vector_store: FAISS) -> pd.DataFrame:
+    """Classify each purchase into a NACE code.
+
+    It relies on a similarity score search against a FAISS vector store of NACE codes.
+    The supplier name and commodity fields are concatenated
 
     Parameters
     ----------
     df : pd.DataFrame
-        Preprocessed purchase data.
+        The input purchase data.
+    nace_vector_store : FAISS
+        The FAISS vector store containing NACE code embeddings.
 
     Returns
     -------
     pd.DataFrame
-        The input DataFrame with an additional column for NACE codes.
+        The input DataFrame with an additional column for the classified NACE codes.
     """
-    # Example mapping of commodities to NACE codes
-    nace_mapping = {
-        "recyclable waste": "38.21",
-        "work clothes": "14.12",
-        "gloves": "14.19",
-        "table trolleys": "31.01",
-    }
+    # Combine input features for similarity search
+    _c = "combined_text"
+    df[_c] = df[ic.supplier_name] + " " + df[ic.commodity]
+    # ToDo: refine text combination logic.
 
-    def infer_nace_code(row: pd.Series) -> str:
-        commodity = row[ic.commodity]
-        for keyword, code in nace_mapping.items():
-            if keyword in commodity:
-                return code
-        return "00.00"  # Default NACE code for unknown items
+    # Define input batch
+    input_texts: List[str] = df[_c].tolist()
 
-    # Apply the classification logic
-    df[oc.nace_code] = df.apply(infer_nace_code, axis=1)
+    # Create input embeddings
+    # input_embeddings is a List[embeddings] (with embeddings := List[float])
+    input_embeddings = nace_vector_store.embeddings.embed_documents(input_texts)
+
+    # Perform a (batch) similarity search
+    results = []
+    for purchase in input_embeddings:
+        results.append(nace_vector_store.similarity_search_by_vector(purchase, k=1))
+
+    # Extract the best NACE code  match for each input row
+    nace_codes = [r[0].metadata[oc.nace_code] for r in results]
+
+    # Add the classified NACE codes to the DataFrame
+    df[oc.nace_code] = nace_codes
+
+    # Drop temporal col
+    df.drop(columns=[_c], inplace=True)
+
     return df
