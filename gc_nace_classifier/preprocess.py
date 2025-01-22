@@ -39,6 +39,7 @@ def data_preprocessing(file_path: str) -> pd.DataFrame:
 
     # Normalize and strip white spaces
     for c in [ic.commodity, ic.sub_commodity, ic.supplier_name, ic.supplier_country]:
+        df[c] = df[c].str.replace(r"[^\w\s]", "", regex=True)
         df[c] = df[c].str.lower().str.strip()
 
     # Create an integer index to each row so they can be identified/traced afterwards.

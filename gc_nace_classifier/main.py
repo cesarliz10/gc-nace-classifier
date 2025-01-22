@@ -43,7 +43,7 @@ async def classify_nace(file: UploadFile = File(...)) -> Dict:
     nace_df = classify_nace_code(df, nace_vector_store)
     # Return dictionary result
     response = nace_df[
-        [oc.index, oc.nace_code, ic.supplier_name, ic.commodity]
+        [oc.index, oc.nace_code, oc.description, ic.supplier_name, ic.commodity]
     ].to_dict(orient="records")
     return {"rows": response}
 
@@ -71,5 +71,7 @@ async def raw_materials(file: UploadFile = File(...)) -> Dict:
     # Infer raw materials
     materials_df = infer_raw_materials(df)
     # Return dictionary result
-    response = materials_df[[oc.index, oc.raw_materials]].to_dict(orient="records")
+    response = materials_df[
+        [oc.index, ic.commodity, ic.sub_commodity, oc.raw_materials]
+    ].to_dict(orient="records")
     return {"rows": response}

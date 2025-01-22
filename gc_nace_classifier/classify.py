@@ -33,6 +33,7 @@ def classify_nace_code(df: pd.DataFrame, nace_vector_store: FAISS) -> pd.DataFra
     """
     # Combine input features for similarity search
     _c = "combined_text"
+
     df[_c] = df[ic.supplier_name] + " " + df[ic.commodity]
     # ToDo: refine text combination logic.
 
@@ -50,9 +51,11 @@ def classify_nace_code(df: pd.DataFrame, nace_vector_store: FAISS) -> pd.DataFra
 
     # Extract the best NACE code  match for each input row
     nace_codes = [r[0].metadata[oc.nace_code] for r in results]
+    description_code = [r[0].metadata[oc.description] for r in results]
 
     # Add the classified NACE codes to the DataFrame
     df[oc.nace_code] = nace_codes
+    df[oc.description] = description_code
 
     # Drop temporal col
     df.drop(columns=[_c], inplace=True)

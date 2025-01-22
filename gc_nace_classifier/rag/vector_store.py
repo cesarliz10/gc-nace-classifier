@@ -45,11 +45,13 @@ def build_nace_vector_store(
     # Compute embeddings for NACE descriptions
     # embeddings = embedding_model.encode(nace_descriptions, convert_to_numpy=True)
 
+    metadatas = nace_table[[oc.nace_code, oc.description]].to_dict("records")
+
     # Create FAISS vector store
     vector_store = FAISS.from_texts(
         texts=nace_descriptions,
         embedding=embedding_model,
-        metadatas=[{oc.nace_code: code} for code in nace_table[oc.nace_code]],
+        metadatas=metadatas,
     )
 
     # Save the FAISS index locally if the flag is set

@@ -37,3 +37,4 @@ class OutputColumns:
     index = "purchase_index"
     raw_materials = "raw_materials"
     nace_code = "nace_code"
+    description = "description"

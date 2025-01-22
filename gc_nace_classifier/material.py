@@ -3,9 +3,20 @@
 from typing import List
 
 import pandas as pd
+from mlx_lm import generate
 
 from gc_nace_classifier.models import InputColumns as ic
 from gc_nace_classifier.models import OutputColumns as oc
+from gc_nace_classifier.rag.llm import model, tokenizer
+
+PROMPT_TEMPLATE = (
+    "Commodity description: {commodity_info}.\n\n"
+    "Instruction:\n\n"
+    "Extract the words corresponding to raw materials from the commodity description provided. "
+    "Avoid adjectives or numbers."
+    "Provide the result as a pure Python list of the raw material(s) extracted, "
+    "without any extra text."
+)
 
 
 def infer_raw_materials(df: pd.DataFrame) -> pd.DataFrame:
@@ -21,26 +32,36 @@ def infer_raw_materials(df: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         The input DataFrame with an additional column for raw materials.
     """
-    _ = None
+    # Combine input features for commodity description
+    _c = "combined_text"
+    df[_c] = df[ic.commodity] + " " + df[ic.sub_commodity]
 
-    def _infer(row: pd.Series) -> List[str]:
-        """Infer raw material dummy."""
-        materials = []
-        commodity = row[ic.commodity]
-        sub_commodity = row[ic.sub_commodity]
+    # Define input batch
+    input_texts: List[str] = df[_c].tolist()
 
-        # Example rule-based classification
-        if "steel" in commodity or "steel" in sub_commodity:
-            materials.append("steel")
-        if "wood" in commodity or "wood" in sub_commodity:
-            materials.append("wood")
-        if "fabric" in commodity or "fabric" in sub_commodity:
-            materials.append("fabric")
-        if "plastic" in commodity or "plastic" in sub_commodity:
-            materials.append("plastic")
+    # Infer materials for batch
+    results = []
+    for commodity_info in input_texts:
+        # Build prompt passed to LLM
+        messages = [
+            {
+                "role": "user",
+                "content": PROMPT_TEMPLATE.format(commodity_info=commodity_info),
+            }
+        ]
+        prompt = tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+        # Generate response
+        results.append(
+            generate(
+                model,
+                tokenizer,
+                prompt=prompt,
+                verbose=False,
+                max_tokens=512,
+            )
+        )
 
-        return materials
-
-    # Apply the classification logic
-    df[oc.raw_materials] = df.apply(_infer, axis=1)
+    df[oc.raw_materials] = results
     return df
